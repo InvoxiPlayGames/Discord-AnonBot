@@ -11,6 +11,15 @@ $webhooklookup = array(
 $avatarprefix = "https://api.dicebear.com/5.x/identicon/png?seed=";
 // a secret key, part of user hash generation
 $secretkey = "RANDOM_GENERATED_SECRET_KEY_PLEASE_CHANGE_THIS_TO_ENSURE_ANONYMITY";
+// enables using random messages
+$enablerandom = true;
+// random messages to use on successful message send, as a funny
+$randommessages = array(
+	"Why did you post that?",
+	"Good post, my friend."
+);
+// the frequency at which the random messages will be added, 0 - 100%, 1 - 50%, 2 - 33%, 3 - 25%, etc
+$randomfreq = 3;
 
 // -- CODE STARTS HERE --
 
@@ -93,12 +102,20 @@ if ($jsondata["type"] == 2) {
 			die(http_response_code(500));
 		}
 		
+		// choose a random message
+		if ($enablerandom == true && rand(0, $randomfreq) == 0) {
+			$msgno = rand(0,count($randommessages)-1);
+			$randommsg = $randommessages[$msgno];
+		} else {
+			$randommsg = "";
+		}
+		
 		// return an ephemeral response message
-        // it would be ideal if we could just forego this entirely and have it seamless
+		// it would be ideal if we could just forego this entirely and have it seamless
 		$resp = array(
 			'type' => 4,
 			'data' => array(
-				'content' => 'Anonymous message posted.',
+				'content' => "Anonymous message posted. $randommsg",
 				'flags' => 64
 			)
 		);
