@@ -88,6 +88,19 @@ if ($jsondata["type"] == 2) {
 			);
 			die(json_encode($resp));
 		}
+		
+		// don't allow users to post in pinned threads
+		if (($channeldata["flags"] & 2) == 2) {
+			$resp = array(
+				'type' => 4,
+				'data' => array(
+					'content' => 'You can\'t post anonymously in pinned threads.',
+					'flags' => 64
+				)
+			);
+			die(json_encode($resp));
+		}
+
 		// fetch the webhook's URL 
 		$webhookurl = $webhooklookup[$channeldata["parent_id"]];
 		
