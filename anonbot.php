@@ -20,6 +20,8 @@ $randommessages = array(
 );
 // the frequency at which the random messages will be added, 0 - 100%, 1 - 50%, 2 - 33%, 3 - 25%, etc
 $randomfreq = 3;
+// the time (in seconds) to re-roll everyone's anon tag, set to 0 to ignore (or if on PHP that only supports 32-bit integers)
+$reroll_time = 172800;
 
 // -- CODE STARTS HERE --
 
@@ -72,8 +74,19 @@ header("Content-Type: application/json");
 if ($jsondata["type"] == 2) {
 	// check if the command name is the "anon" command
 	if ($jsondata["data"]["name"] == "anon") {
+		// calculate the time since the thread was created
+		$uhs_append = "";
+		if ($reroll_time !== 0) {
+			// hacky snowflake parsing, doesn't work on systems with 32-bit integers (php moment)
+			$thread_id = intval($jsondata["channel_id"]);
+			$thread_timestamp = (($thread_id >> 22) + 1420070400000) / 1000;
+			$cur_time = time();
+			$roll_count_since_thread = floor(($cur_time - $thread_timestamp) / $reroll_time);
+			// add the roll count to the end of the user hash source
+			$uhs_append = "$roll_count_since_thread";
+		}
 		// create a hash of the thread id + user id for 4-letter ID and picture generation
-		$uhs = sha1($jsondata["channel_id"] . $jsondata["member"]["user"]["id"] . $secretkey);
+		$uhs = sha1($jsondata["channel_id"] . $jsondata["member"]["user"]["id"] . $secretkey . $uhs_append);
 		
 		// fetch the data about the thread's channel itself, since discord doesn't send that in the interaction request
 		// this is inefficient but..what can ya do?
